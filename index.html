@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splunk SPL Quiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .question-container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .correct {
+            color: #27ae60;
+        }
+        .incorrect {
+            color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <h1>Splunk SPL Quiz</h1>
+        <div id="question-container" class="question-container"></div>
+        <button id="prev-btn" style="display:none;">Back</button>
+        <button id="next-btn">Next</button>
+        <button id="submit-btn" style="display:none;">Submit</button>
+    </div>
+
+    <div id="results" style="display:none;">
+        <h2>Quiz Results</h2>
+        <div id="score"></div>
+        <div id="feedback"></div>
+        <h3>Summary:</h3>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What does SPL stand for in Splunk?",
+                answers: [
+                    "Search Processing Language",
+                    "Simple Programming Language",
+                    "Structured Processing Language",
+                    "Search Protocol Language"
+                ],
+                correct: [0]
+            },
+            {
+                question: "What role does the `source` parameter play in an SPL query?",
+                answers: [
+                    "It specifies the format of the data",
+                    "It specifies the data source",
+                    "It filters the search results",
+                    "It sorts the search results"
+                ],
+                correct: [1]
+            },
+            {
+                question: "How do you define a transaction in Splunk? (Multiple answers)",
+                answers: [
+                    "By a group of events with a common session ID",
+                    "By a group of events with a common IP address",
+                    "By the number of events in a specific time period",
+                    "By the sequence of events"
+                ],
+                correct: [0, 1]
+            },
+            {
+                question: "Which SPL function calculates the absolute value?",
+                answers: [
+                    "round",
+                    "abs",
+                    "sqrt",
+                    "pow"
+                ],
+                correct: [1]
+            },
+            {
+                question: "What does the `rex` command do in SPL?",
+                answers: [
+                    "Calculates the sum of fields",
+                    "Extracts fields using regular expressions",
+                    "Converts data formats",
+                    "Performs mathematical operations"
+                ],
+                correct: [1]
+            },
+            {
+                question: "How would you display the top 5 results sorted by a column in SPL? (Multiple answers)",
+                answers: [
+                    "| sort -column | head 5",
+                    "| top 5 column",
+                    "| head 5 | sort column",
+                    "| stats top 5 by column"
+                ],
+                correct: [0, 3]
+            },
+            {
+                question: "What is the `eval` function in SPL used for? (Multiple answers)",
+                answers: [
+                    "To calculate expressions",
+                    "To extract data",
+                    "To store results in fields",
+                    "To sort search results"
+                ],
+                correct: [0, 2]
+            },
+            {
+                question: "Which SPL function would be used to convert a string to lowercase?",
+                answers: [
+                    "upper",
+                    "lower",
+                    "substr",
+                    "trim"
+                ],
+                correct: [1]
+            },
+            {
+                question: "How is a subsearch represented in SPL?",
+                answers: [
+                    "{search expression}",
+                    "[search expression]",
+                    "(search expression)",
+                    "<search expression>"
+                ],
+                correct: [1]
+            },
+            {
+                question: "Which SPL function is used to compare an IP address with a CIDR subnet?",
+                answers: [
+                    "ipmatch",
+                    "ipcheck",
+                    "cidrmatch",
+                    "ipcidr"
+                ],
+                correct: [2]
+            },
+            {
+                question: "What is the difference between `fillnull` and `filldown` in SPL? (Multiple answers)",
+                answers: [
+                    "`fillnull` replaces NULL values with a specified value",
+                    "`filldown` replaces NULL values with the last non-NULL value",
+                    "`fillnull` sorts the data",
+                    "`filldown` filters the search results"
+                ],
+                correct: [0, 1]
+            },
+            {
+                question: "Which function in SPL would be used to convert a numeric string to a number?",
+                answers: [
+                    "tostring",
+                    "tonumber",
+                    "convert",
+                    "tonumber"
+                ],
+                correct: [2]
+            },
+            {
+                question: "What is the `lookup` function in SPL used for? (Multiple answers)",
+                answers: [
+                    "To insert values from a lookup table into the search result",
+                    "To sort data",
+                    "To calculate fields",
+                    "To format search results"
+                ],
+                correct: [0]
+            },
+            {
+                question: "What does the `stats` command do in SPL?",
+                answers: [
+                    "Calculates statistics such as sum, average, maximum, etc., for specified fields",
+                    "Sorts search results",
+                    "Extracts fields",
+                    "Deletes events"
+                ],
+                correct: [0]
+            },
+            {
+                question: "What role does the `fields` function play in SPL?",
+                answers: [
+                    "It calculates statistics",
+                    "It sorts search results",
+                    "It selects the fields to display in search results",
+                    "It filters search results"
+                ],
+                correct: [2]
+            },
+            {
+                question: "How would you rename a field in SPL?",
+                answers: [
+                    "| rename old_field to new_field",
+                    "| rename old_field as new_field",
+                    "| rename old_field new_field",
+                    "| rename old_field = new_field"
+                ],
+                correct: [1]
+            },
+            {
+                question: "What is the `coalesce` function in SPL and what is it used for?",
+                answers: [
+                    "Calculates the average of fields",
+                    "Returns the first non-NULL value in a list of values",
+                    "Deletes NULL values",
+                    "Converts data formats"
+                ],
+                correct: [1]
+            },
+            {
+                question: "Which function in SPL generates a mask for an IP address?",
+                answers: [
+                    "ipmask",
+                    "ipcidr",
+                    "cidrmatch",
+                    "maskip"
+                ],
+                correct: [0]
+            },
+            {
+                question: "How would you specify a time span of 5 minutes in SPL?",
+                answers: [
+                    "span=5",
+                    "span=5m",
+                    "span=5min",
+                    "span=5minutes"
+                ],
+                correct: [1]
+            },
+            {
+                question: "What does the `transaction` command do in SPL?",
+                answers: [
+                    "Groups search results into transactions based on common fields",
+                    "Sorts search results",
+                    "Calculates statistics",
+                    "Converts data formats"
+                ],
+                correct: [0]
+            }
+        ];
+
+        let currentQuestion = 0;
+        const userAnswers = [];
+
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            const isMultipleChoice = question.correct.length > 1;
+            let answerHtml = '';
+            for (let i = 0; i < question.answers.length; i++) {
+                const inputType = isMultipleChoice ? 'checkbox' : 'radio';
+                answerHtml += `
+                    <div>
+                        <input type="${inputType}" id="answer${i}" name="answer" value="${i}" ${userAnswers[currentQuestion] && userAnswers[currentQuestion].includes(i.toString()) ? 'checked' : ''}>
+                        <label for="answer${i}">${question.answers[i]}</label>
+                    </div>
+                `;
+            }
+            $('#question-container').html(`
+                <h2>Question ${currentQuestion + 1}</h2>
+                <p>${question.question}</p>
+                ${answerHtml}
+            `);
+            updateButtons();
+        }
+
+        function updateButtons() {
+            $('#prev-btn').toggle(currentQuestion > 0);
+            $('#next-btn').toggle(currentQuestion < questions.length - 1);
+            $('#submit-btn').toggle(currentQuestion === questions.length - 1);
+        }
+
+        function nextQuestion() {
+            userAnswers[currentQuestion] = $('input[name="answer"]:checked').map(function() {
+                return this.value;
+            }).get();
+            currentQuestion++;
+            displayQuestion();
+        }
+
+        function prevQuestion() {
+            currentQuestion--;
+            displayQuestion();
+        }
+
+        function submitQuiz() {
+            userAnswers[currentQuestion] = $('input[name="answer"]:checked').map(function() {
+                return this.value;
+            }).get();
+            let score = 0;
+            let summaryHtml = '';
+            for (let i = 0; i < questions.length; i++) {
+                const userAnswer = userAnswers[i] || [];
+                const correctAnswer = questions[i].correct;
+                const isCorrect = userAnswer.length === correctAnswer.length && 
+                                  userAnswer.every(value => correctAnswer.includes(parseInt(value)));
+                if (isCorrect) {
+                    score++;
+                }
+                summaryHtml += `
+                    <p>
+                        <strong>Question ${i + 1}:</strong> ${questions[i].question}<br>
+                        Your answer: ${userAnswer.map(j => questions[i].answers[j]).join(', ') || 'No answer'}<br>
+                        Correct answer: ${correctAnswer.map(j => questions[i].answers[j]).join(', ')}<br>
+                        <span class="${isCorrect ? 'correct' : 'incorrect'}">
+                            ${isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                    </p>
+                `;
+            }
+            const percentage = (score / questions.length) * 100;
+            $('#quiz-container').hide();
+            $('#results').show();
+            $('#score').html(`You answered ${score} out of ${questions.length} questions correctly (${percentage.toFixed(2)}%).`);
+            $('#feedback').html(percentage >= 80 ? '<p class="correct">Congratulations! You passed.</p>' : '<p class="incorrect">Sorry, you did not pass. Try again.</p>');
+            $('#summary').html(summaryHtml);
+        }
+
+        $(document).ready(function() {
+            displayQuestion();
+            $('#next-btn').click(nextQuestion);
+            $('#prev-btn').click(prevQuestion);
+            $('#submit-btn').click(submitQuiz);
+        });
+    </script>
+</body>
+</html>
